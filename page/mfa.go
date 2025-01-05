@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/serialt/roc/utils/mfa"
@@ -20,31 +21,19 @@ func Mfa(w fyne.Window) fyne.CanvasObject {
 	header.TextSize = 20
 	header.Alignment = fyne.TextAlignCenter
 
-	// mfaName := widget.NewEntry()
-	// mfaCode := widget.NewEntry()
-	// mfaCode.SetPlaceHolder("Input Text Or Read from Clipboard")
 	keychain := mfa.ReadKeychain(filepath.Join(os.Getenv("HOME"), ".2fa"))
 	mfaList := keychain.List()
-	mfaWL := widget.NewList(
-		func() int {
-			return len(mfaList)
-		},
-		func() fyne.CanvasObject {
-			return widget.NewLabel("Code")
-		},
-		func(i widget.ListItemID, o fyne.CanvasObject) {
-			o.(*widget.Label).SetText(mfaList[i])
-		})
-	selectW := widget.NewSelect(mfaList, func(value string) {
-	})
-	selectW.PlaceHolder = "请选择"
-	selectW.SetSelectedIndex(0)
-	// selectAll := widget.NewButton("List all", tapped func())
+	mfaWL := GetListData(&mfaList)
 
 	output := widget.NewEntry()
 	output.MultiLine = true
 	output.Wrapping = fyne.TextWrapBreak
 	output.SetPlaceHolder("Output Result")
+
+	mfaWL.OnSelected = func(id widget.ListItemID) {
+		output.Text = keychain.Code(mfaList[id])
+		output.Refresh()
+	}
 
 	listWG := widget.NewButtonWithIcon("List all", theme.ListIcon(), func() {
 		kcMap := keychain.ShowAll()
@@ -55,22 +44,7 @@ func Mfa(w fyne.Window) fyne.CanvasObject {
 
 		output.Text = fmt.Sprint(strings.Join(kcSlice, "\n"))
 		output.Refresh()
-		selectW.Refresh()
-		mfaWL.Refresh()
 	})
-
-	encode := widget.NewButtonWithIcon("Get Code", theme.MediaSkipNextIcon(), func() {
-		// if mfaCode.Text == "" {
-		// input.Text = w.Clipboard().Content()
-		// input.Refresh()
-		// }
-
-		output.Text = keychain.Code(selectW.Selected)
-		output.Refresh()
-		selectW.Refresh()
-		mfaWL.Refresh()
-	})
-	encode.Importance = widget.HighImportance
 	clear := widget.NewButtonWithIcon("Clear", theme.ContentClearIcon(), func() {
 		output.Text = ""
 		output.Refresh()
@@ -81,14 +55,27 @@ func Mfa(w fyne.Window) fyne.CanvasObject {
 		clipboard.SetContent(output.Text)
 	})
 
-	selectw := container.NewHBox(selectW)
-
-	eData := container.NewBorder(nil, nil, nil, container.NewCenter(selectw), mfaWL)
-
-	// return container.NewGridWithRows(0, form)
+	eData := container.NewBorder(nil, nil, nil, nil, mfaWL)
 	return container.NewBorder(header, nil, nil, nil, container.NewGridWithRows(
 		2,
-		container.NewBorder(nil, container.NewGridWithColumns(5, encode, listWG, copy, clear), nil, nil, eData), output,
+		container.NewBorder(nil, container.NewGridWithColumns(5, listWG, copy, clear), nil, nil, eData), output,
 	))
 
+}
+
+func GetListData(nameData *[]string) *widget.List {
+	// list binding, bind pod list data to data
+	data := binding.BindStringList(
+		nameData,
+	)
+
+	list := widget.NewListWithData(data,
+		func() fyne.CanvasObject {
+			return widget.NewLabel("template")
+		},
+		func(i binding.DataItem, o fyne.CanvasObject) {
+			o.(*widget.Label).Bind(i.(binding.String))
+		})
+
+	return list
 }
