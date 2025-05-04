@@ -1,8 +1,8 @@
 Website = "https://github.com/serialt/roc"
 
 [Details]
-Icon = "Icon.png"
-Name = "Roc"
-ID = "io.local"
-Version = "0.1.0"
-Build = 2
+  Icon = "Icon.png"
+  Name = "Roc"
+  ID = "io.local"
+  Version = "0.1.0"
+  Build = 4

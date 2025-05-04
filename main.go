@@ -1,41 +1,40 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
-	"github.com/flopp/go-findfont"
 	"github.com/serialt/roc/page"
+	rocTheme "github.com/serialt/roc/theme"
 )
 
 // 方式一  设置环境变量   通过go-findfont 寻找simkai.ttf 字体
 func init() {
-	fontPaths := findfont.List()
-	for _, path := range fontPaths {
-		//fmt.Println(path)
-		//楷体:simkai.ttf
-		//黑体:simhei.ttf
-		//思源黑体:
-		//  SourceHanSansSC-Bold.ttf
-		//  SourceHanSansSC-ExtraLight.ttf
-		//  SourceHanSansSC-Heavy.ttf
-		//  SourceHanSansSC-Light.ttf
-		//  SourceHanSansSC-Medium.ttf
-		//  SourceHanSansSC-Normal.ttf
-		//  SourceHanSansSC-Regular.ttf
-		//
-		if strings.Contains(path, "SourceHanSansSC-Medium.ttf") {
-			// fmt.Println(path)
-			os.Setenv("FYNE_FONT", path) // 设置环境变量  // 取消环境变量 os.Unsetenv("FYNE_FONT")
-			break
-		}
-	}
-	fmt.Println("=============")
+	// fontPaths := findfont.List()
+	// for _, path := range fontPaths {
+	// 	//fmt.Println(path)
+	// 	//楷体:simkai.ttf
+	// 	//黑体:simhei.ttf
+	// 	//思源黑体:
+	// 	//  SourceHanSansSC-Bold.ttf
+	// 	//  SourceHanSansSC-ExtraLight.ttf
+	// 	//  SourceHanSansSC-Heavy.ttf
+	// 	//  SourceHanSansSC-Light.ttf
+	// 	//  SourceHanSansSC-Medium.ttf
+	// 	//  SourceHanSansSC-Normal.ttf
+	// 	//  SourceHanSansSC-Regular.ttf
+	// 	//
+	// 	if strings.Contains(path, "SourceHanSansSC-Medium.ttf") {
+	// 		// fmt.Println(path)
+	// 		os.Setenv("FYNE_FONT", path) // 设置环境变量  // 取消环境变量 os.Unsetenv("FYNE_FONT")
+	// 		break
+	// 	}
+	// }
+	// fmt.Println("=============")
+	_ = os.Setenv("FYNE_SCALE", "0.85")
 }
 
 func main() {
@@ -45,6 +44,7 @@ func main() {
 
 	tabs := container.NewDocTabs(
 		container.NewTabItem("首页信息", page.WelcomeScreen()),
+		container.NewTabItem("转换", page.TransScreen(win, myApp)),
 		container.NewTabItem("MFA", page.Mfa(win)),
 		container.NewTabItem("中文转拼音", page.PinyinScreen()),
 		container.NewTabItem("加解密", page.HashScreen(win)),
@@ -54,12 +54,13 @@ func main() {
 
 	)
 
+	myApp.Settings().SetTheme(rocTheme.LightTheme{})
 	//tabs.Append(container.NewTabItemWithIcon("Home", theme.HomeIcon(), widget.NewLabel("Home tab")))
 
-	tabs.SetTabLocation(container.TabLocationLeading)
+	// tabs.SetTabLocation(container.TabLocationTrailing)
 
 	win.SetContent(tabs)
-	win.Resize(fyne.NewSize(800, 600))
+	win.Resize(fyne.NewSize(1200, 800))
 	win.ShowAndRun()
 }
 

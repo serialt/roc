@@ -2,6 +2,7 @@ package page
 
 import (
 	"log"
+	"log/slog"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -19,6 +20,7 @@ func FileLockScreen() fyne.CanvasObject {
 		Items: []*widget.FormItem{ // we can specify items in the constructor
 			{Text: "txt", Widget: entry}},
 		OnSubmit: func() { // optional, handle form submission
+			slog.Info("Form submitted", "data", entry.Text)
 			log.Println("Form submitted:", entry.Text)
 			log.Println("multiline:", textArea.Text)
 			// var result string
