@@ -14,17 +14,18 @@ import (
 )
 
 func IpDNSScreen(w fyne.Window) fyne.CanvasObject {
+	app := fyne.CurrentApp()
 	header := canvas.NewText("IP&DNS", theme.Color(theme.ColorNamePrimary))
 	header.TextSize = 20
 	header.Alignment = fyne.TextAlignCenter
 
-	input := widget.NewEntry()
+	input := widget.NewMultiLineEntry()
 	// input.MultiLine = true
 	input.Wrapping = fyne.TextWrapWord
 
 	input.SetPlaceHolder("Input Text Or Read from Clipboard")
 
-	output := widget.NewEntry()
+	output := widget.NewMultiLineEntry()
 	output.MultiLine = true
 	output.Wrapping = fyne.TextWrapBreak
 	output.SetPlaceHolder("Output Result")
@@ -58,7 +59,7 @@ func IpDNSScreen(w fyne.Window) fyne.CanvasObject {
 	})
 	clear.Importance = widget.MediumImportance
 	copy := widget.NewButtonWithIcon("Copy", theme.ContentCutIcon(), func() {
-		clipboard := w.Clipboard()
+		clipboard := app.Clipboard()
 		clipboard.SetContent(output.Text)
 	})
 

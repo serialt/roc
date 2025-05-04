@@ -14,13 +14,13 @@ func HashScreen(w fyne.Window) fyne.CanvasObject {
 	header.TextSize = 20
 	header.Alignment = fyne.TextAlignCenter
 
-	input := widget.NewEntry()
+	input := widget.NewMultiLineEntry()
 	input.MultiLine = true
 	input.Wrapping = fyne.TextWrapWord
 
 	input.SetPlaceHolder("Input Text Or Read from Clipboard")
 
-	output := widget.NewEntry()
+	output := widget.NewMultiLineEntry()
 	output.MultiLine = true
 	output.Wrapping = fyne.TextWrapBreak
 	output.SetPlaceHolder("Output Result")

@@ -60,7 +60,7 @@ func main() {
 	// tabs.SetTabLocation(container.TabLocationTrailing)
 
 	win.SetContent(tabs)
-	win.Resize(fyne.NewSize(1200, 800))
+	win.Resize(fyne.NewSize(1000, 800))
 	win.ShowAndRun()
 }
 

@@ -19,7 +19,7 @@ func PwScreen() fyne.CanvasObject {
 	header.TextSize = 20
 	header.Alignment = fyne.TextAlignCenter
 
-	output := widget.NewEntry()
+	output := widget.NewMultiLineEntry()
 	output.MultiLine = true
 	output.Wrapping = fyne.TextWrapBreak
 	output.SetPlaceHolder("Output Result")
@@ -36,9 +36,9 @@ func PwScreen() fyne.CanvasObject {
 	mixcase := widget.NewCheck("大小写", func(value bool) {})
 	ambiguous := widget.NewCheck("排除歧义字符", func(value bool) {})
 	symbols := widget.NewCheck("特殊字符", func(value bool) {})
-	pwLen := widget.NewEntry()
+	pwLen := widget.NewMultiLineEntry()
 	pwLen.SetPlaceHolder("密码的长度")
-	pwCount := widget.NewEntry()
+	pwCount := widget.NewMultiLineEntry()
 	pwCount.SetPlaceHolder("密码位数")
 
 	encode := widget.NewButtonWithIcon("计算", theme.MediaSkipNextIcon(), func() {

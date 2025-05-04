@@ -25,7 +25,7 @@ func Mfa(w fyne.Window) fyne.CanvasObject {
 	mfaList := keychain.List()
 	mfaWL := GetListData(&mfaList)
 
-	output := widget.NewEntry()
+	output := widget.NewMultiLineEntry()
 	output.MultiLine = true
 	output.Wrapping = fyne.TextWrapBreak
 	output.SetPlaceHolder("Output Result")
@@ -51,7 +51,7 @@ func Mfa(w fyne.Window) fyne.CanvasObject {
 	})
 	clear.Importance = widget.MediumImportance
 	copy := widget.NewButtonWithIcon("Copy", theme.ContentCutIcon(), func() {
-		clipboard := w.Clipboard()
+		clipboard := fyne.CurrentApp().Clipboard()
 		clipboard.SetContent(output.Text)
 	})
 
