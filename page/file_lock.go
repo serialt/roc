@@ -7,11 +7,11 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
-	"github.com/serialt/gopkg"
+	"github.com/serialt/crab"
 )
 
 func FileLockScreen() fyne.CanvasObject {
-	selectEntry := widget.NewSelectEntry([]string{"aes", "3des", "rsa", "ecc", "sha384", "sha512"})
+	selectEntry := widget.NewSelectEntry([]string{"aes", "3des", "rsa", "ecc", "sha512"})
 	selectEntry.PlaceHolder = "请选择加密的算法"
 	entry := widget.NewMultiLineEntry()
 	textArea := widget.NewMultiLineEntry()
@@ -27,15 +27,13 @@ func FileLockScreen() fyne.CanvasObject {
 			var hashStr string
 			switch selectEntry.Text {
 			case "md5":
-				hashStr = gopkg.Md5String(entry.Text)
+				hashStr = crab.Md5String(entry.Text)
 			case "sha1":
-				hashStr = gopkg.HashSha1(entry.Text)
+				hashStr = crab.Sha1(entry.Text)
 			case "sha256":
-				hashStr = gopkg.HashSha256(entry.Text)
-			case "sha384":
-				hashStr = gopkg.HashSha384(entry.Text)
+				hashStr = crab.Sha256(entry.Text)
 			case "sha512":
-				hashStr = gopkg.HashSha512(entry.Text)
+				hashStr = crab.Sha512(entry.Text)
 			default:
 				hashStr = "无法计算此 txt 的 hash 值，请检查后再次进行计算"
 			}

@@ -3,12 +3,15 @@ package page
 import (
 	"bytes"
 	"encoding/json"
+	"log"
+	"strings"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/BurntSushi/toml"
 	"sigs.k8s.io/yaml"
 )
 
@@ -28,7 +31,7 @@ func TransScreen(w fyne.Window, app fyne.App) fyne.CanvasObject {
 		"JSON to YAML",
 		"JSON Fomated",
 		"JSON to TOML",
-		"JSON to PostgreSQL",
+		"TOML Fomated",
 	}
 
 	selectOP := widget.NewSelect(option, func(value string) {})
@@ -37,7 +40,7 @@ func TransScreen(w fyne.Window, app fyne.App) fyne.CanvasObject {
 	encode := widget.NewButtonWithIcon("Trans", theme.MediaSkipNextIcon(), func() {
 
 		if input.Text == "" {
-			input.Text = w.Clipboard().Content()
+			input.Text = app.Clipboard().Content()
 			input.Refresh()
 		}
 
@@ -47,7 +50,7 @@ func TransScreen(w fyne.Window, app fyne.App) fyne.CanvasObject {
 
 		bottomBox := container.NewVBox(
 			widget.NewButtonWithIcon("Copy data", theme.ContentCopyIcon(), func() {
-				winSub.Clipboard().SetContent(transData)
+				app.Clipboard().SetContent(transData)
 			}),
 		)
 		content := container.NewBorder(nil, bottomBox, nil, nil, podYamlScroll)
@@ -70,6 +73,7 @@ func TransScreen(w fyne.Window, app fyne.App) fyne.CanvasObject {
 func TransData(op string, srcData string) (text string) {
 	srcB := []byte(srcData)
 	var tData []byte
+	var err error
 	switch op {
 	case "YAML to JSON":
 		tData, _ = yaml.YAMLToJSON(srcB)
@@ -77,28 +81,76 @@ func TransData(op string, srcData string) (text string) {
 		t1, _ := yaml.YAMLToJSON(srcB)
 		tData, _ = yaml.JSONToYAML(t1)
 	case "YAML to TOML":
+		tData, err = YamlToToml(srcB)
+		if err != nil {
+			log.Printf("YAML to TOML failed, err: %v", err)
+		}
 	case "JSON to YAML":
 		tData, _ = yaml.JSONToYAML(srcB)
 	case "JSON Fomated":
 		var prettyJSON bytes.Buffer
 		_ = json.Indent(&prettyJSON, srcB, "", "  ")
 		tData = prettyJSON.Bytes()
-
-	case "JSON to GO Struct":
-		// // 格式化json
-		// var prettyJSON bytes.Buffer
-		// _ = json.Indent(&prettyJSON, srcB, "", "  ")
-		// t2 := prettyJSON.Bytes()
-
-		// var jsonData map[string]interface{}
-		// _ = json.Unmarshal(t2, &jsonData)
-		// generatedStruct := gengo.GenerateGoStruct(jsonData, "Data")
-		// tData = []byte(generatedStruct)
 	case "JSON to TOML":
-
-	case "JSON to PostgreSQL":
-
+		tData, err = JsonToToml(srcB)
+		if err != nil {
+			log.Printf("JSON to TOML failed, err: %v", err)
+		}
+	case "TOML Fomated":
+		tData, err = TomlFormat(srcB)
+		if err != nil {
+			log.Printf("TOML Fomated failed, err: %v", err)
+		}
 	}
 	text = string(tData)
 	return
+}
+
+func JsonToToml(in []byte) (out []byte, err error) {
+	// 解析 JSON 到 map[string]interface{}
+	var data map[string]interface{}
+	if err = json.Unmarshal(in, &data); err != nil {
+		return
+	}
+	// 使用 toml.Encoder 输出 TOML 字符串
+	var tomlResult bytes.Buffer
+	encoder := toml.NewEncoder(&tomlResult)
+	if err = encoder.Encode(data); err != nil {
+		return
+	}
+	out = tomlResult.Bytes()
+	return
+}
+
+func YamlToToml(in []byte) (out []byte, err error) {
+	// 使用 map[string]interface{} 存储解析后的数据
+	var data map[string]interface{}
+	err = yaml.Unmarshal(in, &data)
+	if err != nil {
+		return
+	}
+	var tomlResult any = data
+	out, err = toml.Marshal(tomlResult)
+	if err != nil {
+		return
+	}
+	return
+}
+
+func TomlFormat(in []byte) (out []byte, err error) {
+	// Step 1: 解析 TOML 字符串到 map
+	var parsed map[string]interface{}
+	_, err = toml.Decode(string(in), &parsed)
+	if err != nil {
+		return
+	}
+	// Step 2: 使用 Encoder 重新生成格式化后的 TOML
+	var formatted strings.Builder
+	encoder := toml.NewEncoder(&formatted)
+	err = encoder.Encode(parsed)
+	if err != nil {
+		return
+	}
+
+	return []byte(formatted.String()), nil
 }

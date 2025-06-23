@@ -6,7 +6,8 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/widget"
 	"github.com/serialt/roc/page"
 	rocTheme "github.com/serialt/roc/theme"
 )
@@ -38,30 +39,54 @@ func init() {
 }
 
 func main() {
-	myApp := app.NewWithID("io.local.roc")
-	myApp.SetIcon(theme.FyneLogo())
-	win := myApp.NewWindow("roc 工具集")
+	mainWin := new(MainWin)
+	globalWin = mainWin
+	mainWin.app = app.NewWithID((AppID))
 
-	tabs := container.NewDocTabs(
+	mainWin.win = mainWin.app.NewWindow("roc 工具集")
+	mainWin.win.Resize(fyne.NewSize(WindowWidth, WindowHeight))
+	mainWin.win.SetPadded(false)
+	mainWin.win.SetMaster()      //退出窗体则退出程序
+	mainWin.win.CenterOnScreen() //屏幕中央
+	mainWin.list = NewListL()
+	mainWin.tabs = container.NewDocTabs(
 		container.NewTabItem("首页信息", page.WelcomeScreen()),
-		container.NewTabItem("转换", page.TransScreen(win, myApp)),
-		container.NewTabItem("MFA", page.Mfa(win)),
-		container.NewTabItem("中文转拼音", page.PinyinScreen()),
-		container.NewTabItem("加解密", page.HashScreen(win)),
-		container.NewTabItem("IP&DNS", page.IpDNSScreen(win)),
-		container.NewTabItem("随机密码", page.PwScreen()),
-		// container.NewTabItem("table", page.TableScreen()),
-
 	)
 
-	myApp.Settings().SetTheme(rocTheme.LightTheme{})
+	// mainWin.list.OnSelected = func(id widget.ListItemID) {
+	// 	// if id == 0 {
+	// 	globalWin.tabs = container.NewDocTabs(
+	// 		// container.NewTabItem("首页信息", page.WelcomeScreen()),
+	// 		container.NewTabItem("转换", page.TransScreen(mainWin.win, mainWin.app)),
+	// 		container.NewTabItem("MFA", page.Mfa(mainWin.win)),
+	// 		container.NewTabItem("中文转拼音", page.PinyinScreen()),
+	// 		container.NewTabItem("加解密", page.HashScreen(mainWin.win)),
+	// 		container.NewTabItem("IP&DNS", page.IpDNSScreen(mainWin.win)),
+	// 		container.NewTabItem("随机密码", page.PwScreen()),
+	// 	)
+
+	// 	Refresh(globalWin)
+
+	// 	// globalWin.win.SetContent(globalWin.tabs)
+
+	// 	// }
+	// }
+	mainWin.app.Settings().SetTheme(rocTheme.LightTheme{})
 	//tabs.Append(container.NewTabItemWithIcon("Home", theme.HomeIcon(), widget.NewLabel("Home tab")))
 
-	// tabs.SetTabLocation(container.TabLocationTrailing)
+	// tabs.SetTabLocation(container.TabLocationLeading)
 
-	win.SetContent(tabs)
-	win.Resize(fyne.NewSize(1000, 800))
-	win.ShowAndRun()
+	leftBtnBox := container.NewHBox(widget.NewLabel("List"), layout.NewSpacer())
+	leftCard := container.NewBorder(leftBtnBox, nil, nil, nil, mainWin.list) //边框
+	leftPanel := widget.NewCard("", "", leftCard)
+
+	// CONTENT
+	content := container.NewHSplit(leftPanel, mainWin.tabs)
+	content.SetOffset(0.15)
+	home := container.NewBorder(nil, nil, nil, nil, content)
+	mainWin.win.SetContent(home)
+
+	mainWin.win.ShowAndRun()
 }
 
 // func makeMenu(fyneApp fyne.App, window fyne.Window) *fyne.MainMenu {
@@ -78,3 +103,34 @@ func main() {
 // 	tree := &widget.Tree{}
 
 // }
+
+type MainWin struct {
+	app      fyne.App
+	win      fyne.Window
+	tabs     *container.DocTabs
+	tree     *widget.Tree
+	list     *widget.List
+	mainMenu *fyne.MainMenu
+}
+
+var (
+	WindowWidth  float32 = 900
+	WindowHeight float32 = 600
+	AppID                = "io.local.roc"
+	globalWin    *MainWin
+)
+
+func Refresh(mainWin *MainWin) {
+	leftBtnBox := container.NewHBox(widget.NewLabel("List"), layout.NewSpacer())
+	leftCard := container.NewBorder(leftBtnBox, nil, nil, nil, mainWin.list) //边框
+	leftPanel := widget.NewCard("", "", leftCard)
+
+	// CONTENT
+	content := container.NewHSplit(leftPanel, mainWin.tabs)
+	content.SetOffset(0.15)
+	mainWin.win.Content().Refresh()
+	mainWin.tabs.Refresh()
+	home := container.NewBorder(nil, nil, nil, nil, content)
+	mainWin.win.SetContent(home)
+
+}

@@ -9,10 +9,35 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/spf13/cast"
 )
+
+// 自定义布局器：两个子元素，第一个占 1/5 高度，第二个占 4/5 高度
+type ProportionalTwoRowLayout struct{}
+
+func (l *ProportionalTwoRowLayout) Layout(objects []fyne.CanvasObject, size fyne.Size) {
+	if len(objects) != 2 {
+		return
+	}
+
+	// 第一个区域占 1/5 高度
+	firstHeight := size.Height * 4 / 10
+	objects[0].Resize(fyne.NewSize(size.Width, firstHeight))
+	objects[0].Move(fyne.NewPos(0, 0))
+
+	// 第二个区域占 4/5 高度
+	secondHeight := size.Height * 6 / 10
+	objects[1].Resize(fyne.NewSize(size.Width, secondHeight))
+	objects[1].Move(fyne.NewPos(0, firstHeight))
+}
+
+func (l *ProportionalTwoRowLayout) MinSize(objects []fyne.CanvasObject) fyne.Size {
+	return fyne.NewSize(100, 200)
+}
 
 func PwScreen() fyne.CanvasObject {
 	header := canvas.NewText("随机密码生成", theme.Color(theme.ColorNamePrimary))
@@ -41,6 +66,39 @@ func PwScreen() fyne.CanvasObject {
 	pwCount := widget.NewMultiLineEntry()
 	pwCount.SetPlaceHolder("密码位数")
 
+	length := 10
+	lengthBind := binding.NewFloat()
+	_ = lengthBind.Set(float64(length))
+
+	count := 10
+	countBind := binding.NewFloat()
+	_ = countBind.Set(float64(count))
+
+	slide1 := widget.NewSliderWithData(0, 64, lengthBind)
+	slide1.Step = 1
+	slide2 := widget.NewSliderWithData(0, 64, countBind)
+	slide2.Step = 1
+	lengthText := widget.NewLabelWithData(binding.FloatToStringWithFormat(lengthBind, "密码长度：%0.0f"))
+	countText := widget.NewLabelWithData(binding.FloatToStringWithFormat(countBind, "密码位数：%0.0f"))
+
+	buttons := container.NewGridWithColumns(8,
+		widget.NewButton("8", func() {
+			_ = lengthBind.Set(8)
+		}),
+		widget.NewButton("16", func() {
+			_ = lengthBind.Set(16)
+		}),
+		widget.NewButton("32", func() {
+			_ = lengthBind.Set(32)
+		}),
+		widget.NewButton("64", func() {
+			_ = lengthBind.Set(64)
+		}))
+
+	lengthLabel := container.NewGridWithColumns(3, container.New(layout.NewFormLayout(), lengthText, slide1), buttons)
+
+	countLabel := container.NewGridWithColumns(3, container.New(layout.NewFormLayout(), countText, slide2))
+
 	encode := widget.NewButtonWithIcon("计算", theme.MediaSkipNextIcon(), func() {
 		pw := &PW{}
 		if standard.Checked {
@@ -67,15 +125,10 @@ func PwScreen() fyne.CanvasObject {
 		if mixcase.Checked {
 			pw.MixedAlpha = true
 		}
-		nLen := cast.ToInt(pwLen.Text)
-		if nLen == 0 {
-			nLen = 18
-		}
-		nCount := cast.ToInt(pwCount.Text)
-		if nCount == 0 {
-			nCount = 10
-		}
-		output.Text = GenPW(pw, nLen, nCount)
+
+		mLen, _ := lengthBind.Get()
+		mCount, _ := countBind.Get()
+		output.Text = GenPW(pw, cast.ToInt(mLen), cast.ToInt(mCount))
 		output.Refresh()
 	})
 	encode.Importance = widget.HighImportance
@@ -83,14 +136,17 @@ func PwScreen() fyne.CanvasObject {
 		output.Text = ""
 		output.Refresh()
 	})
-	check1 := container.NewVBox(standard, num, lowercase, uppercase)
-	check2 := container.NewVBox(mixcase, symbols, ambiguous)
-	check3 := container.NewVBox(pwLen, pwCount)
-	checkB := container.NewBorder(nil, container.NewGridWithColumns(3, encode, clear), nil, nil, container.NewGridWithColumns(4, check1, check2, container.NewGridWithColumns(1, check3)))
 
-	cb := container.NewGridWithRows(2, checkB, output)
+	check1 := container.NewHBox(standard, num, lowercase, uppercase)
+	check2 := container.NewHBox(mixcase, symbols, ambiguous)
+	// check3 := container.NewVBox(pwLen, pwCount)
+	// check4 := container.NewHBox(lengthLabel)
+	checkB := container.NewBorder(nil, container.NewGridWithColumns(10, encode, clear), nil, nil, container.NewVBox(check1, check2, lengthLabel, countLabel))
 
-	return container.NewBorder(header, nil, nil, nil, cb)
+	aas := container.New(&ProportionalTwoRowLayout{}, checkB, output)
+	// cb := container.NewGridWithRows(3, checkB, output)
+
+	return container.NewBorder(header, nil, nil, nil, aas)
 
 }
 
